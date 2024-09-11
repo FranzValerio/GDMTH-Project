@@ -6,9 +6,9 @@ import plotly.express as px
 import plotly.graph_objects as go
 
 # Cargar los datos
-region = pd.read_csv('C:/Users/franz/Desktop/ATCO/cfe-web-scraping/data/region.csv', encoding='ISO-8859-1')
-infra_data = pd.read_csv('C:/Users/franz/Desktop/ATCO/cfe-web-scraping/data/infraestructura_2021.csv')
-tarifas_data = pd.read_csv('C:/Users/franz/Desktop/ATCO/cfe-web-scraping/data/tarifas_2021.csv')
+region = pd.read_csv('C:/Users/Francisco Valerio/Desktop/Work work/Atco/GDMTH-Project/data/region.csv', encoding='ISO-8859-1')
+infra_data = pd.read_csv('C:/Users/Francisco Valerio/Desktop/Work work/Atco/GDMTH-Project/data/infraestructura_2021.csv')
+tarifas_data = pd.read_csv('C:/Users/Francisco Valerio/Desktop/Work work/Atco/GDMTH-Project/data/tarifas_2021.csv')
 
 merged_data = pd.merge(tarifas_data, infra_data, on='id_region', how='inner')
 merged_data = pd.merge(merged_data, region, on='id_region', how='inner')
