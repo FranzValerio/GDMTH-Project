@@ -4,6 +4,7 @@ from dash import dcc, html
 from dash.dependencies import Input, Output
 import plotly.express as px
 import plotly.graph_objects as go
+import json
 
 # Cargar los datos
 region = pd.read_csv('C:/Users/Francisco Valerio/Desktop/Work work/Atco/GDMTH-Project/data/region.csv', encoding='ISO-8859-1')
@@ -54,6 +55,61 @@ data_grouped['mes_x'] = pd.Categorical(data_grouped['mes_x'], categories=orden_m
 data_grouped = data_grouped.sort_values(by=['division', 'mes_x'])
 data_grouped_estado['mes_x'] = pd.Categorical(data_grouped_estado['mes_x'], categories=orden_meses, ordered=True)
 data_grouped_estado = data_grouped_estado.sort_values(by=['estado', 'mes_x'])
+
+# Para el mapa
+
+with open('C:/Users/Francisco Valerio/Desktop/Work work/Atco/GDMTH-Project/data/mexicov2.geojson', encoding = 'utf-8') as f:
+
+     geojson_data = json.load(f)
+
+for feature in geojson_data['features']:
+
+    if isinstance(feature['properties']['sta_name'], list):
+
+        feature['properties']['sta_name'][0] = feature['properties']['sta_name'][0].upper()
+
+# Diccionario de mapeo para normalizar los nombres de estados
+mapeo_estados = {
+    'AGUASCALIENTES': 'AGUASCALIENTES',
+    'BAJA CALIFORNIA': 'BAJA CALIFORNIA',
+    'BAJA CALIFORNIA SUR': 'BAJA CALIFORNIA SUR',
+    'CAMPECHE': 'CAMPECHE',
+    'CHIAPAS': 'CHIAPAS',
+    'CHIHUAHUA': 'CHIHUAHUA',
+    'CIUDAD DE MÉXICO': 'CIUDAD DE MÉXICO',
+    'COAHUILA DE ZARAGOZA': 'COAHUILA',
+    'COLIMA': 'COLIMA',
+    'DURANGO': 'DURANGO',
+    'MÉXICO': 'ESTADO DE MÉXICO',  # Normalizar a 'ESTADO DE MÉXICO'
+    'GUANAJUATO': 'GUANAJUATO',
+    'GUERRERO': 'GUERRERO',
+    'HIDALGO': 'HIDALGO',
+    'JALISCO': 'JALISCO',
+    'MICHOACÁN DE OCAMPO': 'MICHOACÁN',
+    'MORELOS': 'MORELOS',
+    'NAYARIT': 'NAYARIT',
+    'NUEVO LEÓN': 'NUEVO LEÓN',
+    'OAXACA': 'OAXACA',
+    'PUEBLA': 'PUEBLA',
+    'QUERÉTARO': 'QUERÉTARO',
+    'QUINTANA ROO': 'QUINTANA ROO',
+    'SAN LUIS POTOSÍ': 'SAN LUIS POTOSÍ',
+    'SINALOA': 'SINALOA',
+    'SONORA': 'SONORA',
+    'TABASCO': 'TABASCO',
+    'TAMAULIPAS': 'TAMAULIPAS',
+    'TLAXCALA': 'TLAXCALA',
+    'VERACRUZ DE IGNACIO DE LA LLAVE': 'VERACRUZ',
+    'YUCATÁN': 'YUCATÁN',
+    'ZACATECAS': 'ZACATECAS'
+}
+
+# Convertir los nombres en el GeoJSON según el mapeo
+for feature in geojson_data['features']:
+    nombre_estado = feature['properties']['sta_name'][0].upper()
+    if nombre_estado in mapeo_estados:
+        feature['properties']['sta_name'][0] = mapeo_estados[nombre_estado]
+
 
 # Inicializamos la aplicación Dash
 app = dash.Dash(__name__, suppress_callback_exceptions=True)
@@ -112,7 +168,9 @@ histograma_infraestructura.update_layout(
     xaxis_title_text='$/kW',
     yaxis_title_text='Frecuencia',
     bargap=0.2,
-    bargroupgap=0.1
+    bargroupgap=0.1,
+    xaxis_tickfont = dict(size=12),
+    yaxis_tickfont=dict(size=12)
 )
 
 histograma_infraestructura.update_traces(opacity=0.75)
@@ -123,7 +181,8 @@ app.layout = html.Div([
         dcc.Tab(label='Análisis exploratorio', value = 'tab-1'),
         dcc.Tab(label='Análisis de correlación',value='tab-2'),
         dcc.Tab(label='Análisis de tendencias', value='tab-3'),
-        dcc.Tab(label='Análisis de Tarifas', value='tab-4')
+        dcc.Tab(label='Análisis de Tarifas', value='tab-4'),
+        dcc.Tab(label='Análisis por ubicación', value='tab-5')
     ]),
     html.Div(id='tabs-content')
 ])
@@ -160,43 +219,48 @@ def render_content(tab):
             html.Div(id='cards-container', children=[
                 # Tarjetas para 'base'
                 html.Div(className='card', children=[
-                    html.Div("Base", className="card-title"),
+                    html.Div("Base [$/kWh]", className="card-title"),
                     html.Div(id='card-mean-base', className='card-value'),
+                    html.Div(id='card-std-base', className='card-value'),
                     html.Div(id='card-max-base', className='card-value'),
                     html.Div(id='card-min-base', className='card-value')
                 ], style={'margin': '10px'}),
 
                 # Tarjetas para 'intermedia'
                 html.Div(className='card', children=[
-                    html.Div("Intermedia", className="card-title"),
+                    html.Div("Intermedia [$/kWh]", className="card-title"),
                     html.Div(id='card-mean-intermedia', className='card-value'),
+                    html.Div(id='card-std-intermedia', className='card-value'),
                     html.Div(id='card-max-intermedia', className='card-value'),
                     html.Div(id='card-min-intermedia', className='card-value')
-                ], style={'margin': '10px'}),
+                ], style={'margin': '10px', 'width': '220px'}),
 
                 # Tarjetas para 'punta'
                 html.Div(className='card', children=[
-                    html.Div("Punta", className="card-title"),
+                    html.Div("Punta [$/kWh]", className="card-title"),
                     html.Div(id='card-mean-punta', className='card-value'),
+                    html.Div(id='card-std-punta', className='card-value'),
                     html.Div(id='card-max-punta', className='card-value'),
                     html.Div(id='card-min-punta', className='card-value')
                 ], style={'margin': '10px'}),
 
                 # Tarjetas para 'distribucion'
                 html.Div(className='card', children=[
-                    html.Div("Distribución", className="card-title"),
+                    html.Div("Distribución [$/kW]", className="card-title"),
                     html.Div(id='card-mean-distribucion', className='card-value'),
+                    html.Div(id='card-std-distribucion', className='card-value'),
                     html.Div(id='card-max-distribucion', className='card-value'),
                     html.Div(id='card-min-distribucion', className='card-value')
-                ], style={'margin': '10px'}),
+                ], style={'margin': '10px', 'width': '220px'}),
 
                 # Tarjetas para 'capacidad'
                 html.Div(className='card', children=[
-                    html.Div("Capacidad", className="card-title"),
+                    html.Div("Capacidad [$/kW]", className="card-title"),
                     html.Div(id='card-mean-capacidad', className='card-value'),
+                    html.Div(id='card-std-capacidad', className='card-value'),
                     html.Div(id='card-max-capacidad', className='card-value'),
                     html.Div(id='card-min-capacidad', className='card-value')
-                ], style={'margin': '10px'}),
+                ], style={'margin': '10px', 'width': '220px'}),
             ], style={'display': 'flex', 'justify-content': 'space-around', 'flex-wrap': 'wrap'}),
 
             # Gráfico dinámico
@@ -250,7 +314,7 @@ def render_content(tab):
 
         interpretacion_corr = html.Div([
         html.H2('Interpretación de la correlación'),
-        html.P('La correlación mide la relación entre dos variables. '
+        html.P('La correlación mide la relación entre dos variables.'
                'Los valores de correlación varían entre -1 y 1, donde:'),
         html.Ul([
             html.Li('1.0 a 0.7: Correlación positiva fuerte'),
@@ -262,7 +326,8 @@ def render_content(tab):
         ]),
         html.P('Una correlación positiva implica que ambas variables tienden a aumentar o '
                'disminuir juntas, mientras que una correlación negativa implica que una variable '
-               'aumenta mientras la otra disminuye.')
+               'aumenta mientras la otra disminuye.'),
+        html.P('Observamos que en la matriz de correlación ')
         ])
 
 
@@ -296,11 +361,11 @@ def render_content(tab):
                 dcc.Dropdown(
                     id='tendencias-selector',
                     options=[
-                    {'label': 'Tarifa Base', 'value': 'base'},
-                    {'label': 'Tarifa Intermedia', 'value': 'intermedia'},
-                    {'label': 'Tarifa Punta', 'value': 'punta'},
-                    {'label': 'Tarifa Capacidad', 'value': 'capacidad'},
-                    {'label': 'Tarifa Distribución', 'value': 'distribucion'}
+                    {'label': 'Base', 'value': 'base'},
+                    {'label': 'Intermedia', 'value': 'intermedia'},
+                    {'label': 'Punta', 'value': 'punta'},
+                    {'label': 'Capacidad', 'value': 'capacidad'},
+                    {'label': 'Distribución', 'value': 'distribucion'}
                     ],
                     value = 'base',
                     className = 'dropdown'
@@ -328,23 +393,49 @@ def render_content(tab):
             ),
             dcc.Graph(id='max-tarifa-graph')
         ])
+    
+    elif tab == 'tab-5':
+
+        return html.Div([
+            html.H1("Visualización de tarifas por estado"),
+            html.Label("Selecciona una tarifa:"),
+            dcc.Dropdown(
+                id='map-tarifa-selector',
+                options=[
+                    {'label': 'Base', 'value': 'base_mean'},
+                    {'label': 'Intermedia', 'value': 'intermedia_mean'},
+                    {'label': 'Punta', 'value': 'punta_mean'},
+                    {'label': 'Distribución', 'value':'distribucion_mean'},
+                    {'label': 'Capacidad', 'value': 'capacidad_mean'}
+                ],
+                value = 'base_mean',
+                clearable=False,
+                className='dropdown'
+            ),
+            dcc.Graph(id='map-graph')
+        ])
         
 
 # Callback para actualizar las tarjetas con estadísticas clave
 @app.callback(
     [Output('card-mean-base', 'children'),
+     Output('card-std-base', 'children'),
      Output('card-max-base', 'children'),
      Output('card-min-base', 'children'),
      Output('card-mean-intermedia', 'children'),
+     Output('card-std-intermedia', 'children'),
      Output('card-max-intermedia', 'children'),
      Output('card-min-intermedia', 'children'),
      Output('card-mean-punta', 'children'),
+     Output('card-std-punta', 'children'),
      Output('card-max-punta', 'children'),
      Output('card-min-punta', 'children'),
      Output('card-mean-distribucion', 'children'),
+     Output('card-std-distribucion', 'children'),
      Output('card-max-distribucion', 'children'),
      Output('card-min-distribucion', 'children'),
      Output('card-mean-capacidad', 'children'),
+     Output('card-std-capacidad', 'children'),
      Output('card-max-capacidad', 'children'),
      Output('card-min-capacidad', 'children')],
     [Input('graph-selector', 'value')]
@@ -353,45 +444,55 @@ def update_cards(selected_graph):
     # Estadísticas para cada variable
     base_stats = {
         'mean': merged_data['base'].mean(),
+        'std': merged_data['base'].std(),
         'max': merged_data['base'].max(),
         'min': merged_data['base'].min()
     }
     intermedia_stats = {
         'mean': merged_data['intermedia'].mean(),
+        'std': merged_data['intermedia'].std(),
         'max': merged_data['intermedia'].max(),
         'min': merged_data['intermedia'].min()
     }
     punta_stats = {
         'mean': merged_data['punta'].mean(),
+        'std': merged_data['punta'].std(),
         'max': merged_data['punta'].max(),
         'min': merged_data['punta'].min()
     }
     distribucion_stats = {
         'mean': merged_data['distribucion'].mean(),
+        'std': merged_data['distribucion'].std(),
         'max': merged_data['distribucion'].max(),
         'min': merged_data['distribucion'].min()
     }
     capacidad_stats = {
         'mean': merged_data['capacidad'].mean(),
+        'std': merged_data['capacidad'].std(),
         'max': merged_data['capacidad'].max(),
         'min': merged_data['capacidad'].min()
     }
 
     # Devolver los valores a las tarjetas
     return [
-        f"Media: {base_stats['mean']:.2f}",
+        f"Promedio: {base_stats['mean']:.2f}",
+        f"Std: {base_stats['std']:.2f}",
         f"Máximo: {base_stats['max']:.2f}",
         f"Mínimo: {base_stats['min']:.2f}",
-        f"Media: {intermedia_stats['mean']:.2f}",
+        f"Promedio: {intermedia_stats['mean']:.2f}",
+        f"Std: {intermedia_stats['std']:.2f}",
         f"Máximo: {intermedia_stats['max']:.2f}",
         f"Mínimo: {intermedia_stats['min']:.2f}",
-        f"Media: {punta_stats['mean']:.2f}",
+        f"Promedio: {punta_stats['mean']:.2f}",
+        f"Std: {punta_stats['std']:.2f}",
         f"Máximo: {punta_stats['max']:.2f}",
         f"Mínimo: {punta_stats['min']:.2f}",
-        f"Media: {distribucion_stats['mean']:.2f}",
+        f"Promedio: {distribucion_stats['mean']:.2f}",
+        f"Std: {distribucion_stats['std']:.2f}",
         f"Máximo: {distribucion_stats['max']:.2f}",
         f"Mínimo: {distribucion_stats['min']:.2f}",
-        f"Media: {capacidad_stats['mean']:.2f}",
+        f"Promedio: {capacidad_stats['mean']:.2f}",
+        f"Std: {capacidad_stats['std']:.2f}",
         f"Máximo: {capacidad_stats['max']:.2f}",
         f"Mínimo: {capacidad_stats['min']:.2f}"
     ]
@@ -444,6 +545,11 @@ def update_tendencias_graph(selected_variable):
                          title='Tarifa Base por Mes y División',
                          labels={'base': 'Base', 'mes_x': 'Mes', 'division': 'División'})
         fig.update_traces(mode='lines+markers')
+        fig.update_layout(
+            yaxis_title_text = 'Base [$/kWh]',
+            xaxis_tickfont = dict(size=12),
+            yaxis_tickfont = dict(size=12)
+        )
         
     elif selected_variable == 'intermedia':
         fig = px.scatter(data_grouped, 
@@ -453,6 +559,11 @@ def update_tendencias_graph(selected_variable):
                          title='Tarifa Intermedia por Mes y División',
                          labels={'intermedia': 'Intermedia', 'mes_x': 'Mes', 'division': 'División'})
         fig.update_traces(mode='lines+markers')
+        fig.update_layout(
+            yaxis_title_text = 'Intermedia [$/kWh]',
+            xaxis_tickfont = dict(size=12),
+            yaxis_tickfont = dict(size=12)
+        )
         
     elif selected_variable == 'punta':
         fig = px.scatter(data_grouped, 
@@ -462,6 +573,11 @@ def update_tendencias_graph(selected_variable):
                          title='Tarifa Punta por Mes y División',
                          labels={'punta': 'Punta', 'mes_x': 'Mes', 'division': 'División'})
         fig.update_traces(mode='lines+markers')
+        fig.update_layout(
+            yaxis_title_text = 'Punta [$/kWh]',
+            xaxis_tickfont = dict(size=12),
+            yaxis_tickfont = dict(size=12)
+        )
         
     elif selected_variable == 'capacidad':
 
@@ -472,6 +588,11 @@ def update_tendencias_graph(selected_variable):
                          title='Tarifa Capacidad por Mes y División',
                          labels={'capacidad': 'Capacidad', 'mes_x': 'Mes', 'division': 'División'})
         fig.update_traces(mode='lines+markers')
+        fig.update_layout(
+            yaxis_title_text = 'Capacidad [$/kW]',
+            xaxis_tickfont = dict(size=12),
+            yaxis_tickfont = dict(size=12)
+        )
         
     elif selected_variable == 'distribucion':
 
@@ -482,6 +603,11 @@ def update_tendencias_graph(selected_variable):
                          title='Tarifa Punta por Mes y División',
                          labels={'distribucion': 'Distribución', 'mes_x': 'Mes', 'division': 'División'})
         fig.update_traces(mode='lines+markers')
+        fig.update_layout(
+            yaxis_title_text = 'Distribución [$/kW]',
+            xaxis_tickfont = dict(size=12),
+            yaxis_tickfont = dict(size=12)
+        )
 
     # Retornar el gráfico
     return fig
@@ -512,13 +638,48 @@ def update_max_tarifa_graph(selected_tarifa):
                  )
     
     fig.update_layout(
-        xaxis_title = f'Tarifa {tarifa_name} máxima',
+        xaxis_title = '$/kWh',
         yaxis_title = 'Estado',
-        xaxis_tickfont = dict(size = 10),
-        yaxis_tickfont = dict(size = 10)
+        xaxis_tickfont = dict(size = 12),
+        yaxis_tickfont = dict(size = 12)
     )
 
     return fig
+
+# Diccionario de mapeo para nombres más amigables
+tarifa_labels = {
+    'base_mean': 'Tarifa Base',
+    'intermedia_mean': 'Tarifa Intermedia',
+    'punta_mean': 'Tarifa Punta',
+    'distribucion_mean': 'Tarifa Distribución',
+    'capacidad_mean': 'Tarifa Capacidad'
+}
+
+@app.callback(
+    Output('map-graph', 'figure'),
+    [Input('map-tarifa-selector', 'value')]
+)
+
+def update_map_graph(selected_tarifa):
+
+    fig = px.choropleth_mapbox(
+        data_grouped_estado,
+        geojson=geojson_data,
+        locations = 'estado',
+        featureidkey='properties.sta_name[0]',
+        color = selected_tarifa,
+        mapbox_style='carto-positron',
+        zoom = 4,
+        center={"lat": 23.6345, "lon": -102.5528},
+        opacity=0.7,
+        labels={selected_tarifa: tarifa_labels[selected_tarifa]}
+    )
+
+    fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
+
+    return fig
+
+    
 
 # Ejecutar la aplicación de Dash
 if __name__ == '__main__':

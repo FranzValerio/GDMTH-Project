@@ -164,9 +164,9 @@ def get_table_count():
     
 def sample_municipios(municipios, sample_size):
 
-    if len(municipios) < sample_size:
+    if len(municipios) <= sample_size:
 
-        sample_size = len(municipios)
+        sample_size = municipios
 
     return random.sample(municipios, sample_size)
 
@@ -224,7 +224,7 @@ try:
 
                     sample_municipios_list = sample_municipios(municipios, sample_size)
 
-                    for municipio in municipios:
+                    for municipio in sample_municipios_list:
                         if safe_select_dropdown_option(municipio_dropdown_xpath, municipio):
 
                             ultimo_municipio = municipio
