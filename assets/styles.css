@@ -111,3 +111,37 @@ body {
 .graph {
     margin-top: 20px;
 }
+
+#max-tarifa-selector {
+    background-color: #333333; /* Fondo oscuro */
+    color: rgb(0, 0, 0); /* Texto blanco */
+    border-radius: 5px;
+    padding: 10px;
+    margin-bottom: 20px;
+}
+
+
+/* Asegurarse de que las opciones del dropdown sean visibles */
+#max-tarifa-selector .Select-option {
+    background-color: #444444; /* Fondo oscuro para las opciones */
+    color: rgb(0, 0, 0); /* Texto blanco en las opciones */
+}
+
+#max-tarifa-selector .Select-option.is-focused {
+    background-color: #555555; /* Fondo más claro para opción seleccionada */
+    color: rgb(0, 0, 0); /* Texto blanco */
+}
+
+#max-tarifa-selector .Select-control {
+    background-color: #333333; /* Fondo del control de selección */
+    color: rgb(0, 0, 0); /* Texto dentro del control */
+}
+
+/* Placeholder y valor seleccionado */
+#max-tarifa-selector .Select-placeholder {
+    color: #000000; /* Color gris claro para el placeholder */
+}
+
+#max-tarifa-selector .Select-value-label {
+    color: rgb(255, 255, 255); /* Color del valor seleccionado */
+}

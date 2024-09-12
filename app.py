@@ -29,10 +29,31 @@ data_grouped = merged_data.groupby(['division', 'mes_x']).agg({
     'capacidad': 'mean'
 }).reset_index()
 
+# Datos agrupados por estado y mes:
+
+data_grouped_estado = merged_data.groupby(['estado', 'mes_x']).agg({
+    'base': ['mean', 'max', 'min'],
+    'intermedia': ['mean', 'max', 'min'],
+    'punta': ['mean', 'max', 'min'],
+    'distribucion': ['mean', 'max', 'min'],
+    'capacidad': ['mean', 'max', 'min']
+}).reset_index()
+
+# Aplanamos la df
+
+data_grouped_estado.columns = ['estado', 'mes_x',
+                               'base_mean', 'base_max', 'base_min',
+                               'intermedia_mean', 'intermedia_max', 'intermedia_min',
+                               'punta_mean', 'punta_max', 'punta_min',
+                               'distribucion_mean', 'distribucion_max', 'distribucion_min',
+                               'capacidad_mean', 'capacidad_max', 'capacidad_min']
+
 # Definir el orden correcto de los meses
 orden_meses = ['ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO', 'JULIO', 'AGOSTO', 'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE']
 data_grouped['mes_x'] = pd.Categorical(data_grouped['mes_x'], categories=orden_meses, ordered=True)
 data_grouped = data_grouped.sort_values(by=['division', 'mes_x'])
+data_grouped_estado['mes_x'] = pd.Categorical(data_grouped_estado['mes_x'], categories=orden_meses, ordered=True)
+data_grouped_estado = data_grouped_estado.sort_values(by=['estado', 'mes_x'])
 
 # Inicializamos la aplicación Dash
 app = dash.Dash(__name__, suppress_callback_exceptions=True)
@@ -102,6 +123,7 @@ app.layout = html.Div([
         dcc.Tab(label='Análisis exploratorio', value = 'tab-1'),
         dcc.Tab(label='Análisis de correlación',value='tab-2'),
         dcc.Tab(label='Análisis de tendencias', value='tab-3'),
+        dcc.Tab(label='Análisis de Tarifas', value='tab-4')
     ]),
     html.Div(id='tabs-content')
 ])
@@ -288,6 +310,26 @@ def render_content(tab):
             dcc.Graph(id = 'tendencias-graph')
         ])
 
+    elif tab == 'tab-4':
+        
+        return html.Div([
+            html.H1('Comportamiento de las tarifas por Estado'),
+            html.Label('Selecciona una tarifa:'),
+            dcc.Dropdown(
+                id='max-tarifa-selector',
+                options=[
+                    {'label': 'Base', 'value': 'base_max'},
+                    {'label': 'Intermedia', 'value': 'intermedia_max'},
+                    {'label': 'Distribución', 'value': 'distribucion_max'},
+                    {'label': 'Capacidad', 'value': 'capacidad_max'}
+                ],
+                value = 'base_max',
+                clearable = False
+            ),
+            dcc.Graph(id='max-tarifa-graph')
+        ])
+        
+
 # Callback para actualizar las tarjetas con estadísticas clave
 @app.callback(
     [Output('card-mean-base', 'children'),
@@ -442,6 +484,40 @@ def update_tendencias_graph(selected_variable):
         fig.update_traces(mode='lines+markers')
 
     # Retornar el gráfico
+    return fig
+
+@app.callback(
+    Output('max-tarifa-graph', 'figure'),
+    [Input('max-tarifa-selector', 'value')]
+)
+
+def update_max_tarifa_graph(selected_tarifa):
+
+    # Extraemos los el top 10 de estados con la tarifa más alta seleccionada
+
+    top_10_estados = data_grouped_estado.groupby('estado')[selected_tarifa].max().reset_index().sort_values(by = selected_tarifa, ascending = False).head(10)
+
+    # Creamos la gráfica
+
+    tarifa_name = selected_tarifa.split('_')[0].capitalize()
+
+    fig = px.bar(top_10_estados,
+                 x = selected_tarifa,
+                 y = 'estado',
+                 orientation = 'h',
+                 title = f'Top 10 de estados con mayor tarifa {tarifa_name}',
+                 labels = {selected_tarifa: f'Tarifa {tarifa_name} Máxima'},
+                 text = selected_tarifa,
+                 color = 'estado'
+                 )
+    
+    fig.update_layout(
+        xaxis_title = f'Tarifa {tarifa_name} máxima',
+        yaxis_title = 'Estado',
+        xaxis_tickfont = dict(size = 10),
+        yaxis_tickfont = dict(size = 10)
+    )
+
     return fig
 
 # Ejecutar la aplicación de Dash
