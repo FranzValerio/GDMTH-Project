@@ -174,6 +174,11 @@ flag_estado_encontrado = False
 
 try:
     # Selección de año y mes, omitiendo '---Selecciona---'
+
+    # IMPORTANTE: Para el año 2024, la página cambia el XPATH para la selección del mes
+    # ANTERIOR A 2024 el XPath del mes es: '//*[@id="ContentPlaceHolder1_MesVerano3_ddMesConsulta"]'
+    # Para 2024 el XPath del mes es: '//*[@id="ContentPlaceHolder1_Fecha2_ddMes"]'
+    
     safe_select_dropdown_option('//*[@id="ContentPlaceHolder1_Fecha_ddAnio"]', str(anio))
     safe_select_dropdown_option('//*[@id="ContentPlaceHolder1_MesVerano3_ddMesConsulta"]', mes)
 
