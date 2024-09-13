@@ -378,20 +378,34 @@ def render_content(tab):
     elif tab == 'tab-4':
         
         return html.Div([
-            html.H1('Comportamiento de las tarifas por Estado'),
+            html.H1('Análisis las tarifas por Estado'),
+            html.Label('Selecciona una opción:'),
+            dcc.Dropdown(
+                id='tipo-seleccion',
+                options=[
+                    {'label': 'Máximas', 'value': 'max'},
+                    {'label': 'Mínimas', 'value': 'min'}
+                ],
+                value = 'max',
+                clearable = False,
+                className='dropdown'
+            ),
+
             html.Label('Selecciona una tarifa:'),
             dcc.Dropdown(
                 id='max-tarifa-selector',
                 options=[
-                    {'label': 'Base', 'value': 'base_max'},
-                    {'label': 'Intermedia', 'value': 'intermedia_max'},
-                    {'label': 'Distribución', 'value': 'distribucion_max'},
-                    {'label': 'Capacidad', 'value': 'capacidad_max'}
+                    {'label': 'Base', 'value': 'base'},
+                    {'label': 'Intermedia', 'value': 'intermedia'},
+                    {'label': 'Punta', 'value': 'punta'},
+                    {'label': 'Distribución', 'value': 'distribucion'},
+                    {'label': 'Capacidad', 'value': 'capacidad'}
                 ],
-                value = 'base_max',
-                clearable = False
+                value = 'base',
+                clearable = False,
+                className='dropdown'
             ),
-            dcc.Graph(id='max-tarifa-graph')
+            dcc.Graph(id='tarifa-graph')
         ])
     
     elif tab == 'tab-5':
@@ -613,27 +627,46 @@ def update_tendencias_graph(selected_variable):
     return fig
 
 @app.callback(
-    Output('max-tarifa-graph', 'figure'),
-    [Input('max-tarifa-selector', 'value')]
+    Output('tarifa-graph', 'figure'),
+    [Input('max-tarifa-selector', 'value'),
+     Input('tipo-seleccion', 'value')]
 )
 
-def update_max_tarifa_graph(selected_tarifa):
+def update_max_tarifa_graph(selected_tarifa, tipo_seleccion):
 
-    # Extraemos los el top 10 de estados con la tarifa más alta seleccionada
+    column_name = f'{selected_tarifa}_{tipo_seleccion}'
 
-    top_10_estados = data_grouped_estado.groupby('estado')[selected_tarifa].max().reset_index().sort_values(by = selected_tarifa, ascending = False).head(10)
+    if tipo_seleccion == 'min':
+
+        filtered_data = data_grouped_estado[data_grouped_estado[column_name] > 0]
+
+    else:
+
+        filtered_data = data_grouped_estado
+
+    if tipo_seleccion == 'max':
+
+        top_10_estados = filtered_data.groupby('estado')[column_name].max().reset_index().sort_values(by= column_name, ascending=False).head(10)
+
+        titulo_grafico = f'Top 10 de estados con mayor tarifa {selected_tarifa.capitalize()} promedio'
+
+    else:
+
+        top_10_estados = filtered_data.groupby('estado')[column_name].min().reset_index().sort_values(by=column_name, ascending=True).head(10)
+
+        titulo_grafico = f'Top 10 de estados con menor tarifa {selected_tarifa.capitalize()}'
 
     # Creamos la gráfica
 
-    tarifa_name = selected_tarifa.split('_')[0].capitalize()
+    #tarifa_name = selected_tarifa.split('_')[0].capitalize()
 
     fig = px.bar(top_10_estados,
-                 x = selected_tarifa,
+                 x = column_name,
                  y = 'estado',
                  orientation = 'h',
-                 title = f'Top 10 de estados con mayor tarifa {tarifa_name}',
-                 labels = {selected_tarifa: f'Tarifa {tarifa_name} Máxima'},
-                 text = selected_tarifa,
+                 title = titulo_grafico,
+                 labels = {selected_tarifa: f'Tarifa {tipo_seleccion.capitalize()} {selected_tarifa.capitalize()}'},
+                 text = column_name,
                  color = 'estado'
                  )
     

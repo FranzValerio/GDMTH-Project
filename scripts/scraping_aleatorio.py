@@ -172,9 +172,9 @@ def get_table_count():
     
 def sample_municipios(municipios, sample_size):
 
-    if len(municipios) < sample_size:
+    if len(municipios) <= sample_size:
 
-        sample_size = len(municipios)
+        return municipios
 
     return random.sample(municipios, sample_size)
 
