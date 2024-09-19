@@ -1,6 +1,6 @@
 import pandas as pd
 
-anio = 2021
+anio = 2024
 std_path = 'C:/Users/Francisco Valerio/Desktop/Work work/Atco/GDMTH-Project/data'
 
 region_path = std_path + '/region.csv'

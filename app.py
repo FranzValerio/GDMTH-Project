@@ -7,12 +7,14 @@ import plotly.graph_objects as go
 import json
 
 # Cargar los datos
-region = pd.read_csv('C:/Users/Francisco Valerio/Desktop/Work work/Atco/GDMTH-Project/data/region.csv', encoding='ISO-8859-1')
-infra_data = pd.read_csv('C:/Users/Francisco Valerio/Desktop/Work work/Atco/GDMTH-Project/data/infraestructura_2021.csv')
-tarifas_data = pd.read_csv('C:/Users/Francisco Valerio/Desktop/Work work/Atco/GDMTH-Project/data/tarifas_2021.csv')
+# region = pd.read_csv('C:/Users/Francisco Valerio/Desktop/Work work/Atco/GDMTH-Project/data/region.csv', encoding='ISO-8859-1')
+# infra_data = pd.read_csv('C:/Users/Francisco Valerio/Desktop/Work work/Atco/GDMTH-Project/data/infraestructura_2021.csv')
+# tarifas_data = pd.read_csv('C:/Users/Francisco Valerio/Desktop/Work work/Atco/GDMTH-Project/data/tarifas_2021.csv')
 
-merged_data = pd.merge(tarifas_data, infra_data, on='id_region', how='inner')
-merged_data = pd.merge(merged_data, region, on='id_region', how='inner')
+# merged_data = pd.merge(tarifas_data, infra_data, on='id_region', how='inner')
+# merged_data = pd.merge(merged_data, region, on='id_region', how='inner')
+
+merged_data = pd.read_csv('C:/Users/Francisco Valerio/Desktop/Work work/Atco/GDMTH-Project/data/final_data/tarifas_gdmth_cfe.csv')
 
 # Datos para boxplots e histogramas
 datos_base = merged_data['base']
@@ -22,7 +24,7 @@ datos_capacidad = merged_data['capacidad']
 datos_distribucion = merged_data['distribucion']
 
 # Agrupar los datos por división y mes
-data_grouped = merged_data.groupby(['division', 'mes_x']).agg({
+data_grouped = merged_data.groupby(['anio_x', 'mes_x', 'division']).agg({
     'base': 'mean',
     'intermedia': 'mean',
     'punta': 'mean',
@@ -50,9 +52,25 @@ data_grouped_estado.columns = ['estado', 'mes_x',
                                'capacidad_mean', 'capacidad_max', 'capacidad_min']
 
 # Definir el orden correcto de los meses
+
+# Mapear los meses en formato numérico
+meses_mapping = {
+    'ENERO': '01', 'FEBRERO': '02', 'MARZO': '03', 'ABRIL': '04', 'MAYO': '05',
+    'JUNIO': '06', 'JULIO': '07', 'AGOSTO': '08', 'SEPTIEMBRE': '09', 'OCTUBRE': '10',
+    'NOVIEMBRE': '11', 'DICIEMBRE': '12'
+}
+
+# Convertir mes_x a su formato numérico
+data_grouped['mes_num'] = data_grouped['mes_x'].map(meses_mapping)
 orden_meses = ['ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO', 'JULIO', 'AGOSTO', 'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE']
-data_grouped['mes_x'] = pd.Categorical(data_grouped['mes_x'], categories=orden_meses, ordered=True)
-data_grouped = data_grouped.sort_values(by=['division', 'mes_x'])
+# Crear la columna fecha combinando anio_x y mes_num
+data_grouped['fecha'] = pd.to_datetime(data_grouped['anio_x'].astype(str) + '-' + data_grouped['mes_num'], format='%Y-%m')
+
+# Ordenar por la nueva columna fecha
+data_grouped = data_grouped.sort_values(by=['fecha', 'division'])
+#data_grouped['mes_x'] = pd.Categorical(data_grouped['mes_x'], categories=orden_meses, ordered=True)
+#data_grouped['anio_x'] = pd.to_numeric(data_grouped['anio_x'], errors='coerce')
+#data_grouped = data_grouped.sort_values(by=['mes_x', 'anio_x'])
 data_grouped_estado['mes_x'] = pd.Categorical(data_grouped_estado['mes_x'], categories=orden_meses, ordered=True)
 data_grouped_estado = data_grouped_estado.sort_values(by=['estado', 'mes_x'])
 
@@ -118,11 +136,11 @@ app = dash.Dash(__name__, suppress_callback_exceptions=True)
 
 # Crear los boxplots de tarifas
 boxplots_tarifas = go.Figure()
-boxplots_tarifas.add_trace(go.Box(x=datos_base, name='Base', marker_color='blue'))
+boxplots_tarifas.add_trace(go.Box(x=datos_base, name='Base', marker_color='blue', line_width=2.5))
 boxplots_tarifas.add_trace(go.Box(x=datos_intermedia, name='Intermedia', marker_color='green'))
 boxplots_tarifas.add_trace(go.Box(x=datos_punta, name='Punta', marker_color='red'))
 boxplots_tarifas.update_layout(
-    title_text='Boxplots de los datos de Base, Intermedia y Punta del año 2021',
+    title_text='Boxplots de los datos de Base, Intermedia y Punta (Enero 2021-Septiembre 2024)',
     yaxis_title_text='$/kWh',
     boxmode='group'
 )
@@ -132,7 +150,7 @@ boxplots_infraestructura = go.Figure()
 boxplots_infraestructura.add_trace(go.Box(x=datos_capacidad, name='Capacidad', marker_color='purple'))
 boxplots_infraestructura.add_trace(go.Box(x=datos_distribucion, name='Distribución', marker_color='orange'))
 boxplots_infraestructura.update_layout(
-    title_text='Boxplots de los datos de Distribución y Capacidad del año 2021',
+    title_text='Boxplots de los datos de Distribución y Capacidad (Enero 2021 - Septiembre 2024)',
     yaxis_title_text='$/kW',
     boxmode='group'
 )
@@ -159,11 +177,11 @@ datos_distribucion = merged_data['distribucion']
 
 histograma_infraestructura = go.Figure()
 
-histograma_infraestructura.add_trace(go.Histogram(x=datos_capacidad, name='Capacidad', marker_color='purple'))
-histograma_infraestructura.add_trace(go.Histogram(x=datos_distribucion, name='Distribución', marker_color='orange'))
+histograma_infraestructura.add_trace(go.Histogram(x=datos_capacidad, name='Capacidad', marker_color='purple', nbinsx=50))
+histograma_infraestructura.add_trace(go.Histogram(x=datos_distribucion, name='Distribución', marker_color='orange', nbinsx=50))
 
 histograma_infraestructura.update_layout(
-    title_text='Distribución de los datos de Capacidad y Distribución del año 2021',
+    title_text='Distribución de los datos de Capacidad y Distribución (Enero 2021 - Septiembre 2024)',
     barmode='overlay',
     xaxis_title_text='$/kW',
     yaxis_title_text='Frecuencia',
@@ -280,7 +298,7 @@ def render_content(tab):
         ))
 
         matrix_corr.update_layout(
-        title='Matriz de correlación entre tarifas del año 2021',
+        title='Matriz de correlación entre tarifas',
         xaxis_nticks=36,
         width=1000,
         height=800
@@ -326,8 +344,7 @@ def render_content(tab):
         ]),
         html.P('Una correlación positiva implica que ambas variables tienden a aumentar o '
                'disminuir juntas, mientras que una correlación negativa implica que una variable '
-               'aumenta mientras la otra disminuye.'),
-        html.P('Observamos que en la matriz de correlación ')
+               'aumenta mientras la otra disminuye.')
         ])
 
 
@@ -378,7 +395,7 @@ def render_content(tab):
     elif tab == 'tab-4':
         
         return html.Div([
-            html.H1('Análisis las tarifas por Estado'),
+            html.H1('Máximos y mínimos de tarifas por Estado'),
             html.Label('Selecciona una opción:'),
             dcc.Dropdown(
                 id='tipo-seleccion',
@@ -411,7 +428,7 @@ def render_content(tab):
     elif tab == 'tab-5':
 
         return html.Div([
-            html.H1("Visualización de tarifas por estado"),
+            html.H1("Visualización del promedio de tarifas por Estado"),
             html.Label("Selecciona una tarifa:"),
             dcc.Dropdown(
                 id='map-tarifa-selector',
@@ -521,11 +538,11 @@ def update_graph(selected_graph):
     if selected_graph == 'histogram':
         # Crear el histograma de tarifas
         histograma_tarifas = go.Figure()
-        histograma_tarifas.add_trace(go.Histogram(x=merged_data['base'], name='Tarifa Base', marker_color='blue'))
-        histograma_tarifas.add_trace(go.Histogram(x=merged_data['intermedia'], name='Tarifa Intermedia', marker_color='green'))
-        histograma_tarifas.add_trace(go.Histogram(x=merged_data['punta'], name='Tarifa Punta', marker_color='red'))
+        histograma_tarifas.add_trace(go.Histogram(x=merged_data['base'], name='Tarifa Base', marker_color='blue', nbinsx=50))
+        histograma_tarifas.add_trace(go.Histogram(x=merged_data['intermedia'], name='Tarifa Intermedia', marker_color='green', nbinsx=50))
+        histograma_tarifas.add_trace(go.Histogram(x=merged_data['punta'], name='Tarifa Punta', marker_color='red', nbinsx=50))
         histograma_tarifas.update_layout(
-            title_text='Distribución de los datos de tarifas Base, Intermedia y Punta del año 2021',
+            title_text='Distribución de los datos de tarifas Base, Intermedia y Punta (Enero 2021-Septiembre 2024)',
             barmode='overlay',
             xaxis_title_text='$/kWh',
             yaxis_title_text='Frecuencia',
@@ -545,19 +562,22 @@ def update_graph(selected_graph):
     elif selected_graph == 'boxplot_infraestructura':
         return boxplots_infraestructura
 
+
 @app.callback(
     Output('tendencias-graph', 'figure'),
     [Input('tendencias-selector', 'value')]
 )
+
 def update_tendencias_graph(selected_variable):
+
     # Crear un gráfico basado en la variable seleccionada
     if selected_variable == 'base':
         fig = px.scatter(data_grouped, 
-                         x='mes_x', 
+                         x='fecha', 
                          y='base', 
                          color='division',
-                         title='Tarifa Base por Mes y División',
-                         labels={'base': 'Base', 'mes_x': 'Mes', 'division': 'División'})
+                         title='Tarifa Base Promedio por Mes y División (Enero 2021 - Septiembre 2024)',
+                         labels={'base': 'Base', 'fecha': 'Fecha', 'division': 'División'})
         fig.update_traces(mode='lines+markers')
         fig.update_layout(
             yaxis_title_text = 'Base [$/kWh]',
@@ -567,11 +587,11 @@ def update_tendencias_graph(selected_variable):
         
     elif selected_variable == 'intermedia':
         fig = px.scatter(data_grouped, 
-                         x='mes_x', 
+                         x='fecha', 
                          y='intermedia', 
                          color='division',
-                         title='Tarifa Intermedia por Mes y División',
-                         labels={'intermedia': 'Intermedia', 'mes_x': 'Mes', 'division': 'División'})
+                         title='Tarifa Intermedia Promedio por Mes y División (Enero 2021 - Septiembre 2024)',
+                         labels={'intermedia': 'Intermedia', 'fecha': 'Fecha', 'division': 'División'})
         fig.update_traces(mode='lines+markers')
         fig.update_layout(
             yaxis_title_text = 'Intermedia [$/kWh]',
@@ -581,11 +601,11 @@ def update_tendencias_graph(selected_variable):
         
     elif selected_variable == 'punta':
         fig = px.scatter(data_grouped, 
-                         x='mes_x', 
+                         x='fecha', 
                          y='punta', 
                          color='division',
-                         title='Tarifa Punta por Mes y División',
-                         labels={'punta': 'Punta', 'mes_x': 'Mes', 'division': 'División'})
+                         title='Tarifa Punta Promedio por Mes y División (Enero 2021 - Septiembre 2024)',
+                         labels={'punta': 'Punta', 'fecha': 'Fecha', 'division': 'División'})
         fig.update_traces(mode='lines+markers')
         fig.update_layout(
             yaxis_title_text = 'Punta [$/kWh]',
@@ -596,11 +616,11 @@ def update_tendencias_graph(selected_variable):
     elif selected_variable == 'capacidad':
 
         fig = px.scatter(data_grouped, 
-                         x='mes_x', 
+                         x='fecha', 
                          y='capacidad', 
                          color='division',
-                         title='Tarifa Capacidad por Mes y División',
-                         labels={'capacidad': 'Capacidad', 'mes_x': 'Mes', 'division': 'División'})
+                         title='Tarifa Capacidad Promedio por Mes y División (Enero 2021 - Septiembre 2024)',
+                         labels={'capacidad': 'Capacidad', 'fecha': 'Fecha', 'division': 'División'})
         fig.update_traces(mode='lines+markers')
         fig.update_layout(
             yaxis_title_text = 'Capacidad [$/kW]',
@@ -611,11 +631,11 @@ def update_tendencias_graph(selected_variable):
     elif selected_variable == 'distribucion':
 
         fig = px.scatter(data_grouped, 
-                         x='mes_x', 
+                         x='fecha', 
                          y='distribucion', 
                          color='division',
-                         title='Tarifa Punta por Mes y División',
-                         labels={'distribucion': 'Distribución', 'mes_x': 'Mes', 'division': 'División'})
+                         title='Tarifa Punta Promedio por Mes y División (Enero 2021 - Septiembre 2024)',
+                         labels={'distribucion': 'Distribución', 'fecha': 'Fecha', 'division': 'División'})
         fig.update_traces(mode='lines+markers')
         fig.update_layout(
             yaxis_title_text = 'Distribución [$/kW]',
