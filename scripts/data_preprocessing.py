@@ -1,12 +1,19 @@
 import pandas as pd
+import os
 
-anio = 2024
-std_path = 'C:/Users/Francisco Valerio/Desktop/Work work/Atco/GDMTH-Project/data'
+anio = 2023
+cwd = os.path.split(os.getcwd())
+std_path = os.path.join(cwd[0], 'data')
 
-region_path = std_path + '/region.csv'
-tarifas_path = std_path + f'/tarifas_{anio}.csv'
-infra_path = std_path + f'/infraestructura_{anio}.csv'
-output_path = std_path + f'/final_data/info_{anio}.csv'
+region_path = os.path.join(std_path, 'region.csv')
+tarifas_path = os.path.join(std_path, f'tarifas_gdmth_{anio}.csv')
+infra_path = os.path.join(std_path, f'infraestructura_gdmth_{anio}.csv')
+output_path = os.path.join(std_path, f'final_data/info_{anio}.csv')
+
+# region_path = std_path + '/region.csv'
+# tarifas_path = std_path + f'/tarifas_gdmth_{anio}.csv'
+# infra_path = std_path + f'/infraestructura_gdmth_{anio}.csv'
+# output_path = std_path + f'/final_data/info_{anio}.csv'
 
 def anual_data_processing(region_path, tarifas_path, infra_path, anio, output_csv_path):
 
@@ -19,6 +26,11 @@ def anual_data_processing(region_path, tarifas_path, infra_path, anio, output_cs
 
     tarifas_data.insert(2, 'anio', anio)
     infra_data.insert(2, 'anio', anio)
+
+    # Para el caso de 2024, aún no están las tarifas de diciembre, pero fueron scrapeadas
+    # Comentar para incluirlas
+    #tarifas_data = tarifas_data[tarifas_data['mes'] != 'DICIEMBRE']
+    #infra_data = infra_data[infra_data['mes'] != 'DICIEMBRE']
 
     # Hacemos los merges
 

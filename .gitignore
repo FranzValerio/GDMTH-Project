@@ -1,4 +1,4 @@
+venv/
 .venv/
 /notebooks/mapa.ipynb
-/data/mexico.json
-/data/mexicov2.geojson
+/data

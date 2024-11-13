@@ -1,6 +1,6 @@
 /* Definir el color de fondo de la página completa */
 body {
-    background-color: #2b2b2b; /* Fondo oscuro */
+    background-color: #324ca8; /* Fondo oscuro */
     color: white; /* Color del texto por defecto */
     font-family: 'Helvetica', sans-serif; /* Estilo de fuente */
 }
@@ -9,7 +9,7 @@ body {
 /* Estilos para el título */
 .title {
     text-align: center;
-    font-size: 28px;
+    font-size: 25px;
     font-weight: bold;
     margin-bottom: 20px;
     color: white;
@@ -24,15 +24,15 @@ body {
 }
 
 .dropdown {
-    background-color: #000000; /* Fondo del dropdown */
-    color: black; /* Color del texto */
+    background-color: #324ca8; /* Fondo del dropdown */
+    color: rgb(255, 249, 249); /* Color del texto */
     border-radius: 5px;
     padding: 10px;
 }
 
 /* Estilo para las opciones del dropdown */
 .Select-menu-outer {
-    background-color: #ffffff;
+    background-color: #040000;
 }
 
 .Select-option {
@@ -41,12 +41,12 @@ body {
 }
 
 .Select-option.is-focused {
-    background-color: #555555; /* Fondo cuando se selecciona una opción */
+    background-color: #ffffff; /* Fondo cuando se selecciona una opción */
     color: white;
 }
 
 .Select-control {
-    background-color: #333333;
+    background-color: #ffffff;
     color: white;
 }
 
@@ -112,39 +112,7 @@ body {
     margin-top: 20px;
 }
 
-#max-tarifa-selector {
-    background-color: #333333; /* Fondo oscuro */
-    color: rgb(0, 0, 0); /* Texto blanco */
-    border-radius: 5px;
-    padding: 10px;
-    margin-bottom: 20px;
-}
 
-
-/* Asegurarse de que las opciones del dropdown sean visibles */
-#max-tarifa-selector .Select-option {
-    background-color: #444444; /* Fondo oscuro para las opciones */
-    color: rgb(0, 0, 0); /* Texto blanco en las opciones */
-}
-
-#max-tarifa-selector .Select-option.is-focused {
-    background-color: #555555; /* Fondo más claro para opción seleccionada */
-    color: rgb(0, 0, 0); /* Texto blanco */
-}
-
-#max-tarifa-selector .Select-control {
-    background-color: #333333; /* Fondo del control de selección */
-    color: rgb(0, 0, 0); /* Texto dentro del control */
-}
-
-/* Placeholder y valor seleccionado */
-#max-tarifa-selector .Select-placeholder {
-    color: #000000; /* Color gris claro para el placeholder */
-}
-
-#max-tarifa-selector .Select-value-label {
-    color: rgb(255, 255, 255); /* Color del valor seleccionado */
-}
 
 #map-graph{
     width: 100%;

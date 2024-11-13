@@ -1,3 +1,4 @@
+import os
 import dash
 import pandas as pd
 from dash import dcc, html
@@ -14,8 +15,13 @@ import json
 # merged_data = pd.merge(tarifas_data, infra_data, on='id_region', how='inner')
 # merged_data = pd.merge(merged_data, region, on='id_region', how='inner')
 
-merged_data = pd.read_csv('C:/Users/Francisco Valerio/Desktop/Work work/Atco/GDMTH-Project/data/final_data/tarifas_gdmth_cfe.csv')
-
+#merged_data = pd.read_csv('C:/Users/Francisco Valerio/Desktop/Work work/Atco/GDMTH-Project/data/final_data/tarifas_gdmth_cfe.csv')
+cwd = os.path.split(os.getcwd())
+merged_data = pd.read_csv(os.path.join(cwd[0],
+                                       cwd[1],
+                                       "data",
+                                       "final_data",
+                                       "tarifas_gdmth_cfe.csv"))
 # Datos para boxplots e histogramas
 datos_base = merged_data['base']
 datos_intermedia = merged_data['intermedia']
@@ -76,9 +82,13 @@ data_grouped_estado = data_grouped_estado.sort_values(by=['estado', 'mes_x'])
 
 # Para el mapa
 
-with open('C:/Users/Francisco Valerio/Desktop/Work work/Atco/GDMTH-Project/data/mexicov2.geojson', encoding = 'utf-8') as f:
+with open(os.path.join(cwd[0], cwd[1], "data/mexicov2.geojson"), encoding='utf-8') as f:
 
-     geojson_data = json.load(f)
+    geojson_data = json.load(f)
+
+# with open('C:/Users/Francisco Valerio/Desktop/Work work/Atco/GDMTH-Project/data/mexicov2.geojson', encoding = 'utf-8') as f:
+
+#      geojson_data = json.load(f)
 
 for feature in geojson_data['features']:
 

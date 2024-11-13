@@ -1,13 +1,16 @@
 import pandas as pd
+import os
 
-std_path = 'C:/Users/Francisco Valerio/Desktop/Work work/Atco/GDMTH-Project/data/final_data'
+#std_path = 'C:/Users/Francisco Valerio/Desktop/Work work/Atco/GDMTH-Project/data/final_data'
+cwd = os.path.split(os.getcwd())
+std_path = os.path.join(cwd[0], 'data', 'final_data')
 
-data_2021 = std_path + '/info_2021.csv'
-data_2022 = std_path + '/info_2022.csv'
-data_2023 = std_path + '/info_2023.csv'
-data_2024 = std_path + '/info_2024.csv'
+data_2021 = os.path.join(std_path, 'info_2021.csv')
+data_2022 = os.path.join(std_path, 'info_2022.csv')
+data_2023 = os.path.join(std_path, 'info_2023.csv')
+data_2024 = os.path.join(std_path, 'info_2024.csv')
 
-output = std_path + '/tarifas_gdmth_cfe.csv'
+output = os.path.join(std_path, 'tarifas_gdmth_cfe.csv')
 
 
 def concatenate_csv(output_csv_path, *csv_files):
